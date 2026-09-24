@@ -8,12 +8,22 @@ type LocalState = {
   deleted: number[];
 };
 
-const emptyState = (): LocalState => ({ added: [], updated: {}, deleted: [] });
+const emptyState = (): LocalState => ({
+  added: [],
+  updated: {},
+  deleted: [],
+});
 
 function read(): LocalState {
-  if (typeof window === "undefined") return emptyState();
+  if (typeof window === "undefined") {
+    return emptyState();
+  }
+
   try {
-    return JSON.parse(localStorage.getItem(KEY) || "null") || emptyState();
+    return (
+      JSON.parse(localStorage.getItem(KEY) || "null") ||
+      emptyState()
+    );
   } catch {
     return emptyState();
   }
@@ -29,37 +39,109 @@ export function getLocalState() {
 
 export function addLocalProduct(product: Product) {
   const state = read();
+
   state.added = [product, ...state.added];
+
   write(state);
 }
 
-export function updateLocalProduct(id: number, patch: Partial<Product>) {
+export function updateLocalProduct(
+  id: number,
+  patch: Partial<Product>
+) {
   const state = read();
-  state.updated[String(id)] = { ...(state.updated[String(id)] || {}), ...patch };
+
+  state.updated[String(id)] = {
+    ...(state.updated[String(id)] || {}),
+    ...patch,
+  };
+
   write(state);
 }
 
 export function deleteLocalProduct(id: number) {
   const state = read();
-  if (!state.deleted.includes(id)) state.deleted.push(id);
+
+  if (!state.deleted.includes(id)) {
+    state.deleted.push(id);
+  }
+
   write(state);
 }
 
 export function applyLocalChanges(products: Product[]) {
   const state = read();
-  const filtered = products
-    .filter((product) => !state.deleted.includes(product.id))
-    .map((product) => ({ ...product, ...(state.updated[String(product.id)] || {}) }));
 
-  return filtered;
+  return products
+    .filter(
+      (product) =>
+        !state.deleted.includes(product.id)
+    )
+    .map((product) => ({
+      ...product,
+      ...(state.updated[String(product.id)] || {}),
+    }));
 }
 
 export function getLocalAddedProducts() {
   const state = read();
-  return state.added.filter((product) => !state.deleted.includes(product.id));
+
+  return state.added.filter(
+    (product) =>
+      !state.deleted.includes(product.id)
+  );
 }
 
-export function makeLocalProduct(input: ProductInput, id: number): Product {
+function generateUniqueLocalId(
+  state: LocalState
+): number {
+  /*
+   * DummyJSON has 194 original products.
+   * Locally created products start at 195.
+   */
+
+  const usedIds = new Set<number>();
+
+  // IDs of locally added products
+  for (const product of state.added) {
+    usedIds.add(product.id);
+  }
+
+  // IDs that have local updates
+  for (const id of Object.keys(state.updated)) {
+    const numericId = Number(id);
+
+    if (Number.isInteger(numericId)) {
+      usedIds.add(numericId);
+    }
+  }
+
+  // IDs that were deleted
+  for (const id of state.deleted) {
+    usedIds.add(id);
+  }
+
+  let id = 195;
+
+  while (usedIds.has(id)) {
+    id++;
+  }
+
+  return id;
+}
+
+export function makeLocalProduct(
+  input: ProductInput,
+  _apiId: number
+): Product {
+  const state = read();
+
+  const id = generateUniqueLocalId(state);
+
+  const image =
+    input.thumbnail ||
+    "https://dummyjson.com/image/200x120";
+
   return {
     id,
     title: input.title,
@@ -68,8 +150,8 @@ export function makeLocalProduct(input: ProductInput, id: number): Product {
     price: input.price,
     rating: 0,
     stock: input.stock,
-    thumbnail: input.thumbnail || "https://dummyjson.com/image/200x120",
-    images: [input.thumbnail || "https://dummyjson.com/image/200x120"],
+    thumbnail: image,
+    images: [image],
     reviews: [],
   };
 }

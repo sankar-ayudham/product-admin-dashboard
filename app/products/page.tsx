@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-
 import {
   usePathname,
   useRouter,
   useSearchParams,
 } from "next/navigation";
-
 import {
   useCallback,
   useEffect,
@@ -149,11 +147,17 @@ export default function ProductsPage() {
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchInput, search, updateParams]);
+  }, [
+    searchInput,
+    search,
+    updateParams,
+  ]);
 
   // Load products
   useEffect(() => {
-    const controller = new AbortController();
+    const controller =
+      new AbortController();
+
     const id = ++requestId.current;
 
     setLoading(true);
@@ -166,7 +170,9 @@ export default function ProductsPage() {
             page,
             limit: pageSize,
             search,
-            category: search ? "" : category,
+            category: search
+              ? ""
+              : category,
             sort,
             order,
           },
@@ -179,54 +185,154 @@ export default function ProductsPage() {
 
         const localState = getLocalState();
 
-        const apiProducts = applyLocalChanges(
-          data.products
-        );
+        /*
+         * Products returned by DummyJSON after
+         * applying local edit/delete changes.
+         */
+        const apiProducts =
+          applyLocalChanges(
+            data.products
+          );
 
+        /*
+         * All products created locally.
+         */
         const allAddedProducts =
           getLocalAddedProducts();
 
+        /*
+         * Find locally-added products that match
+         * the current search.
+         *
+         * DummyJSON does not know about these
+         * products, so we must search them ourselves.
+         */
+        const matchingLocalSearchProducts =
+          search
+            ? allAddedProducts.filter(
+                (product) => {
+                  const query =
+                    search.toLowerCase();
+
+                  return (
+                    product.title
+                      .toLowerCase()
+                      .includes(query) ||
+                    product.description
+                      .toLowerCase()
+                      .includes(query) ||
+                    product.category
+                      .toLowerCase()
+                      .includes(query)
+                  );
+                }
+              )
+            : [];
+
         let addedProducts: Product[] = [];
 
-        if (!search && page === 1) {
+        /*
+         * Normal product list:
+         * show all locally-added products on
+         * page 1.
+         */
+        if (
+          !search &&
+          page === 1
+        ) {
           if (!category) {
-            addedProducts = allAddedProducts;
-          } else if (category === "electronics") {
-            addedProducts = allAddedProducts.filter(
-              (product) =>
-                ELECTRONICS_CATEGORIES.includes(
-                  product.category
-                )
-            );
+            addedProducts =
+              allAddedProducts;
+          } else if (
+            category === "electronics"
+          ) {
+            addedProducts =
+              allAddedProducts.filter(
+                (product) =>
+                  ELECTRONICS_CATEGORIES.includes(
+                    product.category
+                  )
+              );
           } else {
-            addedProducts = allAddedProducts.filter(
-              (product) =>
-                product.category === category
-            );
+            addedProducts =
+              allAddedProducts.filter(
+                (product) =>
+                  product.category ===
+                  category
+              );
           }
         }
 
         /*
-         * Avoid duplicate IDs if an old local entry
-         * overlaps with an API product.
+         * Search:
+         * combine DummyJSON search results
+         * with matching locally-added products.
+         */
+        if (search && page === 1) {
+          addedProducts =
+            matchingLocalSearchProducts;
+        }
+
+        /*
+         * Prevent duplicate IDs.
          */
         const combined = [
           ...addedProducts,
           ...apiProducts,
         ];
 
-        const uniqueProducts = Array.from(
-          new Map(
-            combined.map((product) => [
-              product.id,
-              product,
-            ])
-          ).values()
-        );
+        const uniqueProducts =
+          Array.from(
+            new Map(
+              combined.map((product) => [
+                product.id,
+                product,
+              ])
+            ).values()
+          );
 
         const visibleProducts =
-          uniqueProducts.slice(0, pageSize);
+          uniqueProducts.slice(
+            0,
+            pageSize
+          );
 
+        setProducts(visibleProducts);
+
+        /*
+         * Calculate total including matching
+         * local products.
+         */
+        let calculatedTotal =
+          data.total;
+
+        if (search) {
+          calculatedTotal +=
+            matchingLocalSearchProducts.length;
+        } else if (category === "electronics") {
+          calculatedTotal +=
+            allAddedProducts.filter(
+              (product) =>
+                ELECTRONICS_CATEGORIES.includes(
+                  product.category
+                )
+            ).length;
+        } else if (!category) {
+          calculatedTotal +=
+            allAddedProducts.length;
+        } else {
+          calculatedTotal +=
+            allAddedProducts.filter(
+              (product) =>
+                product.category ===
+                category
+            ).length;
+        }
+
+        /*
+         * Account for locally deleted API
+         * products on the normal list.
+         */
         const deletedApiCount =
           localState.deleted.filter(
             (deletedId) =>
@@ -236,19 +342,13 @@ export default function ProductsPage() {
               )
           ).length;
 
-        setProducts(visibleProducts);
+        if (!search && !category) {
+          calculatedTotal -=
+            deletedApiCount;
+        }
 
         setTotal(
-          Math.max(
-            0,
-            data.total +
-              (page === 1 && !search
-                ? addedProducts.length
-                : 0) -
-              (!search && !category
-                ? deletedApiCount
-                : 0)
-          )
+          Math.max(0, calculatedTotal)
         );
       } catch (err) {
         if (
@@ -285,7 +385,7 @@ export default function ProductsPage() {
     retryCount,
   ]);
 
-  // Load categories and add custom Electronics
+  // Load categories
   useEffect(() => {
     let cancelled = false;
 
@@ -313,16 +413,14 @@ export default function ProductsPage() {
 
         setCategories(combined);
       })
-      .catch(() => {
-        // Products can still load if categories fail.
-      });
+      .catch(() => {});
 
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Keep page number valid after loading
+  // Keep page number valid
   useEffect(() => {
     if (loading || error) return;
 
@@ -357,7 +455,9 @@ export default function ProductsPage() {
     product: Product
   ) {
     if (
-      deletingIds.current.has(product.id)
+      deletingIds.current.has(
+        product.id
+      )
     ) {
       return;
     }
@@ -370,7 +470,9 @@ export default function ProductsPage() {
       return;
     }
 
-    deletingIds.current.add(product.id);
+    deletingIds.current.add(
+      product.id
+    );
 
     try {
       const isLocalProduct =
@@ -380,14 +482,18 @@ export default function ProductsPage() {
         );
 
       /*
-       * Locally added products do not exist
+       * Locally-added products do not exist
        * on DummyJSON's server.
        */
       if (!isLocalProduct) {
-        await deleteProduct(product.id);
+        await deleteProduct(
+          product.id
+        );
       }
 
-      deleteLocalProduct(product.id);
+      deleteLocalProduct(
+        product.id
+      );
 
       setProducts((old) =>
         old.filter(
@@ -397,7 +503,10 @@ export default function ProductsPage() {
       );
 
       setTotal((current) =>
-        Math.max(0, current - 1)
+        Math.max(
+          0,
+          current - 1
+        )
       );
     } catch (err) {
       window.alert(
@@ -421,7 +530,8 @@ export default function ProductsPage() {
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            Manage products, search, filter and sort.
+            Manage products, search, filter
+            and sort.
           </p>
         </div>
 
@@ -440,7 +550,9 @@ export default function ProductsPage() {
           <input
             value={searchInput}
             onChange={(e) =>
-              setSearchInput(e.target.value)
+              setSearchInput(
+                e.target.value
+              )
             }
             placeholder="Search products..."
             className="mt-1 w-full rounded-lg border px-3 py-2"
@@ -452,10 +564,16 @@ export default function ProductsPage() {
 
           <select
             disabled={Boolean(search)}
-            value={search ? "" : category}
+            value={
+              search
+                ? ""
+                : category
+            }
             onChange={(e) =>
               updateParams({
-                category: e.target.value || null,
+                category:
+                  e.target.value ||
+                  null,
                 page: "1",
               })
             }
@@ -465,14 +583,16 @@ export default function ProductsPage() {
               All categories
             </option>
 
-            {categories.map((item) => (
-              <option
-                key={item.slug}
-                value={item.slug}
-              >
-                {item.name}
-              </option>
-            ))}
+            {categories.map(
+              (item) => (
+                <option
+                  key={item.slug}
+                  value={item.slug}
+                >
+                  {item.name}
+                </option>
+              )
+            )}
           </select>
         </label>
 
@@ -489,15 +609,17 @@ export default function ProductsPage() {
             }
             className="mt-1 w-full rounded-lg border bg-white px-3 py-2"
           >
-            {validSorts.map((item) => (
-              <option
-                key={item}
-                value={item}
-              >
-                {item[0].toUpperCase() +
-                  item.slice(1)}
-              </option>
-            ))}
+            {validSorts.map(
+              (item) => (
+                <option
+                  key={item}
+                  value={item}
+                >
+                  {item[0].toUpperCase() +
+                    item.slice(1)}
+                </option>
+              )
+            )}
           </select>
         </label>
 
@@ -508,7 +630,8 @@ export default function ProductsPage() {
             value={order}
             onChange={(e) =>
               updateParams({
-                order: e.target.value,
+                order:
+                  e.target.value,
                 page: "1",
               })
             }
@@ -527,9 +650,10 @@ export default function ProductsPage() {
 
       {search && (
         <p className="text-xs text-amber-700">
-          Category filtering is disabled during search
-          because DummyJSON&apos;s search endpoint does
-          not combine search and category filtering.
+          Category filtering is disabled
+          during search because DummyJSON&apos;s
+          search endpoint does not combine
+          search and category filtering.
           Search takes precedence.
         </p>
       )}
@@ -540,7 +664,9 @@ export default function ProductsPage() {
         <ErrorState
           message={error}
           onRetry={() =>
-            setRetryCount((count) => count + 1)
+            setRetryCount(
+              (count) => count + 1
+            )
           }
         />
       ) : products.length === 0 ? (
@@ -560,12 +686,16 @@ export default function ProductsPage() {
             total={total}
             onPage={(nextPage) =>
               updateParams({
-                page: String(nextPage),
+                page: String(
+                  nextPage
+                ),
               })
             }
             onPageSize={(nextSize) =>
               updateParams({
-                pageSize: String(nextSize),
+                pageSize: String(
+                  nextSize
+                ),
                 page: "1",
               })
             }

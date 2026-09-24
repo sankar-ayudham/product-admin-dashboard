@@ -1,81 +1,344 @@
 # Product Admin Dashboard
 
-A small product administration dashboard built for the frontend assignment using **Next.js App Router, React, Tailwind CSS and Axios**, backed by DummyJSON.
+A small product administration dashboard built for the frontend assignment using Next.js App Router, React, TypeScript, Tailwind CSS and Axios, backed by the DummyJSON API.
 
-## Demo credentials
-- Username: `emilys`
-- Password: `emilyspass`
+## Demo Credentials
 
-## Features completed
-- Login with DummyJSON `/auth/login`
-- Protected product routes and logout
-- Shared Axios instance with auth-token request interceptor and centralized error handling
-- Product table on desktop and cards on mobile
-- Pagination using `limit` and `skip`
-- Page size: 10 / 20 / 50
-- Search with 400ms debounce
-- AbortController + request sequencing so stale slow searches cannot replace newer results
-- Category filtering through `/products/categories`
-- Sorting by price, rating or title with ascending/descending order
-- URL state for page, page size, search, category, sort and order
-- Product details and reviews
-- Wrong product ID handling
-- Add / edit / delete forms and confirmation dialog
-- Validation and duplicate-submit protection
-- Loading, empty and retry states
-- Local persistence overlay for DummyJSON mutations
+- Username: emilys
+- Password: emilyspass
 
-## Important API limitation
-DummyJSON explicitly documents that add, update and delete operations are simulated and are not persisted on the server. This app calls the required API endpoint and then stores the resulting local change in `localStorage`, so the UI continues to show the change after navigation or refresh on the same browser.
+## Tech Stack
 
-Search and category are deliberately mutually exclusive. When a search term exists, the category control is disabled and search takes precedence. This avoids pretending the API supports a combined server-side search + category query and keeps pagination totals consistent with the selected API endpoint.
+- Next.js (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- Axios
+- DummyJSON API
+- localStorage for simulated CRUD persistence
+
+## Features Completed
+
+### Authentication
+
+- Login using DummyJSON /auth/login
+- Demo credentials provided above
+- Invalid login credentials show an error message
+- Protected product routes
+- Logout functionality
+- Authentication token attached through a shared Axios instance
+- Duplicate-submit protection during login
+
+### Product Listing
+
+- Desktop table layout
+- Mobile-friendly product cards
+- Product thumbnail
+- Product title
+- Category
+- Price
+- Rating
+- Stock
+- Pagination using limit and skip
+- Page sizes: 10 / 20 / 50
+- Previous / Next pagination
+- Page number navigation
+- Displays the current result range and total count
+
+### Search
+
+- Product search using DummyJSON /products/search?q=
+- 400ms debounce
+- Search state synchronized with the URL
+- Automatically resets to page 1 when searching
+- AbortController used to cancel unnecessary requests
+- Request sequencing prevents stale slow requests from replacing newer search results
+- Locally added products are also included in local search
+
+### Category Filtering
+
+- Categories loaded through /products/categories
+- Category selection through a dropdown
+- Electronics is available as a grouped category
+- Electronics groups:
+  - Smartphones
+  - Laptops
+  - Tablets
+  - Mobile Accessories
+- Category selection is synchronized with the URL
+
+### Sorting
+
+Products can be sorted by:
+
+- Price
+- Rating
+- Title
+
+Both ascending and descending order are supported.
+
+Sorting state is synchronized with the URL.
+
+### Search + Category Behavior
+
+Search and category filtering are deliberately mutually exclusive.
+
+When a search term exists:
+
+- Search takes precedence
+- Category filtering is disabled
+- The search API endpoint is used
+
+This avoids pretending that DummyJSON supports a combined server-side search + category query and keeps pagination totals consistent with the selected API endpoint.
+
+### Product Details
+
+- Product detail page
+- Product images
+- Product description
+- Price
+- Rating
+- Stock
+- Category
+- Customer reviews
+- Invalid product IDs are handled safely
+- Locally added products can also be opened through their product detail page
+
+### Add Product
+
+- Add product form
+- Title validation
+- Description validation
+- Category selection
+- Price validation
+- Stock validation
+- Thumbnail URL validation
+- Duplicate-submit protection
+- Successful products are stored locally because DummyJSON mutations are simulated
+
+### Edit Product
+
+- Edit existing product
+- Form validation
+- Duplicate-submit protection
+- Local persistence of updates
+
+### Delete Product
+
+- Delete confirmation dialog
+- API delete request for normal DummyJSON products
+- Local deletion handling for locally created products
+- Deleted products remain hidden after refresh through local state
+
+### Loading, Error and Empty States
+
+The application includes:
+
+- Loading states
+- Empty states
+- API error states
+- Retry actions
+- Invalid product handling
+- Safe handling of invalid URL parameters
+
+## Important API Limitation
+
+DummyJSON documents that product add, update and delete operations are simulated and are not permanently persisted on the server.
+
+Because of this limitation, this application:
+
+1. Calls the required DummyJSON CRUD endpoint.
+2. Receives the simulated API response.
+3. Stores the resulting local change in localStorage.
+4. Merges local changes with API data when displaying products.
+
+This allows newly added, edited and deleted products to remain visible after navigation or a page refresh in the same browser.
+
+### Local CRUD Persistence
+
+The application maintains local state for:
+
+- Added products
+- Updated products
+- Deleted products
+
+Locally created products receive unique IDs so that adding multiple products does not create duplicate React keys or conflicting product URLs.
+
+## API Architecture
+
+API communication is separated from the UI.
+
+The application uses:
+
+- A shared Axios instance
+- Request interceptor for authentication
+- Centralized error handling
+- Separate product API functions
+- AbortController support for cancellable requests
+
+The UI components do not directly contain the main API request logic.
+
+## URL State
+
+The following product-page state is synchronized with URL query parameters:
+
+- Page
+- Page size
+- Search
+- Category
+- Sort
+- Sort order
+
+This makes product-listing state shareable and preserves the current view when navigating or refreshing.
+
+## Project Structure
+
+product-admin-dashboard/
+|
+├── app/
+│   ├── login/
+│   │   └── page.tsx
+│   │
+│   ├── products/
+│   │   ├── page.tsx
+│   │   ├── new/
+│   │   │   └── page.tsx
+│   │   └── [id]/
+│   │       ├── page.tsx
+│   │       └── edit/
+│   │           └── page.tsx
+│   │
+│   ├── layout.tsx
+│   └── page.tsx
+│
+├── components/
+│   ├── Header.tsx
+│   ├── Loading.tsx
+│   ├── Pagination.tsx
+│   ├── ProductForm.tsx
+│   ├── ProductTable.tsx
+│   └── ProtectedRoute.tsx
+│
+├── lib/
+│   ├── api.ts
+│   ├── auth.ts
+│   ├── local-products.ts
+│   └── products.ts
+│
+├── types/
+│   └── product.ts
+│
+├── public/
+│
+├── README.md
+├── package.json
+└── tsconfig.json
 
 ## Setup
 
-```bash
+Clone the repository:
+
+git clone https://github.com/sankar-ayudham/product-admin-dashboard.git
+
+Move into the project directory:
+
+cd product-admin-dashboard
+
+Install dependencies:
+
 npm install
+
+Start the development server:
+
 npm run dev
-```
 
-Open http://localhost:3000.
+Open:
 
-For a production check:
+http://localhost:3000
 
-```bash
+## Production Check
+
+Build the application:
+
 npm run build
+
+Start the production server:
+
 npm start
-```
 
-## Environment
+## Environment Variables
 
-Create `.env.local` if you want to override the API base URL:
+Create a .env.local file if you want to override the default API URL:
 
-```env
 NEXT_PUBLIC_API_URL=https://dummyjson.com
-```
 
-## Suggested Git commit sequence
-
-Do not submit one giant commit. Example:
-
-```bash
-git init
-git add .
-git commit -m "chore: initialize Next.js dashboard"
-
-git add lib/api.ts lib/auth.ts app/login components/ProtectedRoute.tsx components/Header.tsx
-git commit -m "feat: add authentication and protected routes"
-
-git add lib/products.ts components/ProductTable.tsx components/Pagination.tsx app/products/page.tsx
-git commit -m "feat: add product listing pagination search and filters"
-git add 'app/products/[id]' components/Loading.tsx
-git commit -m "feat: add product details and states"
-git add components/ProductForm.tsx 'app/products/new' 'app/products/[id]/edit' lib/local-products.ts
-git commit -m "feat: add product CRUD UI and local persistence"
-git add README.md
-git commit -m "docs: add setup and implementation notes"
-```
+The application uses DummyJSON by default.
 
 ## Deployment
 
-Import the GitHub repository into Vercel, keep the default Next.js build settings, and add `NEXT_PUBLIC_API_URL=https://dummyjson.com` as an environment variable if desired.
+The project can be deployed to Vercel using the GitHub repository.
+
+Recommended Vercel configuration:
+
+- Framework: Next.js
+- Build command: npm run build
+- Start command: npm start
+
+Environment variable:
+
+NEXT_PUBLIC_API_URL=https://dummyjson.com
+
+## Problem Faced and Solution
+
+### Problem: DummyJSON CRUD operations are simulated
+
+One challenge was handling product creation, editing and deletion because DummyJSON does not permanently persist CRUD operations on its server.
+
+For example, a newly added product could receive an API-generated ID, but the product would not actually exist on the server after the simulated request. This caused issues when trying to open, search for or delete newly created products.
+
+### Solution
+
+I implemented a local persistence layer using localStorage.
+
+The application:
+
+- Generates unique IDs for locally created products.
+- Stores newly added products locally.
+- Stores updates locally.
+- Stores deleted product IDs locally.
+- Merges local changes with API products when displaying data.
+- Uses local data for details, search, edit and delete operations when appropriate.
+
+This allows the dashboard to behave like a persistent CRUD application even though the underlying DummyJSON CRUD API is simulated.
+
+## Git History
+
+The project was developed using separate commits for major features instead of putting the entire implementation into one commit.
+
+Major commits cover:
+
+- Project initialization
+- Authentication and protected routes
+- Product listing, pagination, search and filters
+- Product details and states
+- Product CRUD and local persistence
+- Documentation
+
+## Repository
+
+GitHub repository:
+
+https://github.com/sankar-ayudham/product-admin-dashboard
+
+## Demo Credentials
+
+Username: emilys
+Password: emilyspass
+
+## Notes
+
+- CRUD changes are persisted locally in the browser because DummyJSON does not persist mutations on the server.
+- Clearing browser localStorage will remove locally stored product changes.
+- Search and category filtering are intentionally mutually exclusive.
+- The application is responsive for desktop and mobile layouts.
+- Invalid product IDs and invalid URL values are handled safely.

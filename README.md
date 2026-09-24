@@ -194,11 +194,9 @@ This makes product-listing state shareable and preserves the current view when n
 ## Project Structure
 
 product-admin-dashboard/
-|
 ├── app/
 │   ├── login/
 │   │   └── page.tsx
-│   │
 │   ├── products/
 │   │   ├── page.tsx
 │   │   ├── new/
@@ -207,10 +205,8 @@ product-admin-dashboard/
 │   │       ├── page.tsx
 │   │       └── edit/
 │   │           └── page.tsx
-│   │
 │   ├── layout.tsx
 │   └── page.tsx
-│
 ├── components/
 │   ├── Header.tsx
 │   ├── Loading.tsx
@@ -218,18 +214,14 @@ product-admin-dashboard/
 │   ├── ProductForm.tsx
 │   ├── ProductTable.tsx
 │   └── ProtectedRoute.tsx
-│
 ├── lib/
 │   ├── api.ts
 │   ├── auth.ts
 │   ├── local-products.ts
 │   └── products.ts
-│
 ├── types/
 │   └── product.ts
-│
 ├── public/
-│
 ├── README.md
 ├── package.json
 └── tsconfig.json

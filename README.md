@@ -1,11 +1,11 @@
 # Product Admin Dashboard
 
-A small product administration dashboard built for the frontend assignment using Next.js App Router, React, TypeScript, Tailwind CSS and Axios, backed by the DummyJSON API.
+A small product administration dashboard built for the frontend assignment using **Next.js App Router, React, TypeScript, Tailwind CSS and Axios**, backed by the **DummyJSON API**.
 
 ## Demo Credentials
 
-- Username: emilys
-- Password: emilyspass
+- **Username:** `emilys`
+- **Password:** `emilyspass`
 
 ## Tech Stack
 
@@ -21,7 +21,7 @@ A small product administration dashboard built for the frontend assignment using
 
 ### Authentication
 
-- Login using DummyJSON /auth/login
+- Login using DummyJSON `/auth/login`
 - Demo credentials provided above
 - Invalid login credentials show an error message
 - Protected product routes
@@ -39,7 +39,7 @@ A small product administration dashboard built for the frontend assignment using
 - Price
 - Rating
 - Stock
-- Pagination using limit and skip
+- Pagination using `limit` and `skip`
 - Page sizes: 10 / 20 / 50
 - Previous / Next pagination
 - Page number navigation
@@ -47,17 +47,17 @@ A small product administration dashboard built for the frontend assignment using
 
 ### Search
 
-- Product search using DummyJSON /products/search?q=
+- Product search using DummyJSON `/products/search?q=`
 - 400ms debounce
 - Search state synchronized with the URL
 - Automatically resets to page 1 when searching
 - AbortController used to cancel unnecessary requests
-- Request sequencing prevents stale slow requests from replacing newer search results
+- Request sequencing prevents stale slow searches from replacing newer results
 - Locally added products are also included in local search
 
 ### Category Filtering
 
-- Categories loaded through /products/categories
+- Categories loaded through `/products/categories`
 - Category selection through a dropdown
 - Electronics is available as a grouped category
 - Electronics groups:
@@ -143,13 +143,13 @@ The application includes:
 
 ## Important API Limitation
 
-DummyJSON documents that product add, update and delete operations are simulated and are not permanently persisted on the server.
+DummyJSON documents that product add, update and delete operations are simulated and are **not permanently persisted on the server**.
 
 Because of this limitation, this application:
 
 1. Calls the required DummyJSON CRUD endpoint.
 2. Receives the simulated API response.
-3. Stores the resulting local change in localStorage.
+3. Stores the resulting local change in `localStorage`.
 4. Merges local changes with API data when displaying products.
 
 This allows newly added, edited and deleted products to remain visible after navigation or a page refresh in the same browser.
@@ -193,6 +193,7 @@ This makes product-listing state shareable and preserves the current view when n
 
 ## Project Structure
 
+```text
 product-admin-dashboard/
 ├── app/
 │   ├── login/
@@ -225,44 +226,61 @@ product-admin-dashboard/
 ├── README.md
 ├── package.json
 └── tsconfig.json
+```
 
 ## Setup
 
 Clone the repository:
 
+```bash
 git clone https://github.com/sankar-ayudham/product-admin-dashboard.git
+```
 
 Move into the project directory:
 
+```bash
 cd product-admin-dashboard
+```
 
 Install dependencies:
 
+```bash
 npm install
+```
 
 Start the development server:
 
+```bash
 npm run dev
+```
 
 Open:
 
+```text
 http://localhost:3000
+```
 
 ## Production Check
 
 Build the application:
 
+```bash
 npm run build
+```
 
 Start the production server:
 
+```bash
 npm start
+```
 
 ## Environment Variables
 
-Create a .env.local file if you want to override the default API URL:
+Create a `.env.local` file if you want to override the default API URL:
 
+```env
 NEXT_PUBLIC_API_URL=https://dummyjson.com
+```
 
 The application uses DummyJSON by default.
 
@@ -272,13 +290,15 @@ The project can be deployed to Vercel using the GitHub repository.
 
 Recommended Vercel configuration:
 
-- Framework: Next.js
-- Build command: npm run build
-- Start command: npm start
+- **Framework:** Next.js
+- **Build command:** `npm run build`
+- **Start command:** `npm start`
 
 Environment variable:
 
+```env
 NEXT_PUBLIC_API_URL=https://dummyjson.com
+```
 
 ## Problem Faced and Solution
 
@@ -290,7 +310,7 @@ For example, a newly added product could receive an API-generated ID, but the pr
 
 ### Solution
 
-I implemented a local persistence layer using localStorage.
+I implemented a local persistence layer using `localStorage`.
 
 The application:
 
@@ -324,13 +344,15 @@ https://github.com/sankar-ayudham/product-admin-dashboard
 
 ## Demo Credentials
 
+```text
 Username: emilys
 Password: emilyspass
+```
 
 ## Notes
 
 - CRUD changes are persisted locally in the browser because DummyJSON does not persist mutations on the server.
-- Clearing browser localStorage will remove locally stored product changes.
+- Clearing browser `localStorage` will remove locally stored product changes.
 - Search and category filtering are intentionally mutually exclusive.
 - The application is responsive for desktop and mobile layouts.
 - Invalid product IDs and invalid URL values are handled safely.
